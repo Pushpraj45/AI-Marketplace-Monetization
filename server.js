@@ -48,12 +48,16 @@ const authRoutes = require("./backend/routes/authRoutes");
 const userRoutes = require("./backend/routes/userRoutes");
 const modelRoutes = require("./backend/routes/modelRoutes");
 const chatRoutes = require("./backend/routes/chatRoutes");
+const analyticsRoutes = require("./backend/routes/analyticsRoutes");
+const tokenRoutes = require("./backend/routes/tokenRoutes");
 
 console.log("Routes loaded:", 
   "authRoutes:", !!authRoutes, 
   "userRoutes:", !!userRoutes, 
   "modelRoutes:", !!modelRoutes,
-  "chatRoutes:", !!chatRoutes
+  "chatRoutes:", !!chatRoutes,
+  "analyticsRoutes:", !!analyticsRoutes,
+  "tokenRoutes:", !!tokenRoutes
 );
 
 // Log available routes
@@ -64,6 +68,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/models", modelRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/tokens", tokenRoutes);
 
 // Print all registered routes for debugging
 function printRoutes(routes, basePath = '') {

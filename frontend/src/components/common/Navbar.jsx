@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import TokenDisplay from "../TokenDisplay";
 
 const Navbar = () => {
   const { currentUser, logout } = useAuth();
@@ -172,44 +173,77 @@ const Navbar = () => {
               <NavLink path="/" label="Home" isActive={isActive("/")} />
 
               {currentUser && (
-                <NavLink path="/dashboard" label="Dashboard" isActive={isActive("/dashboard")} />
+                <NavLink
+                  path="/dashboard"
+                  label="Dashboard"
+                  isActive={isActive("/dashboard")}
+                />
               )}
 
               {currentUser?.role === "developer" && (
-                <NavLink path="/models" label="My Models" isActive={isActive("/models")} />
+                <>
+                  <NavLink
+                    path="/models"
+                    label="My Models"
+                    isActive={isActive("/models")}
+                  />
+                  <NavLink
+                    path="/developer-dashboard"
+                    label="Analytics"
+                    isActive={isActive("/developer-dashboard") || isActive("/model-analytics")}
+                  />
+                </>
               )}
 
               {currentUser && (
-                <NavLink path="/marketplace" label="AI Marketplace" isActive={isActive("/marketplace")} />
+                <NavLink
+                  path="/marketplace"
+                  label="AI Marketplace"
+                  isActive={isActive("/marketplace")}
+                />
               )}
 
               {currentUser && (
-                <NavLink path="/models/published" label="Published Models" isActive={isActive("/models/published")} />
+                <NavLink
+                  path="/models/published"
+                  label="Published Models"
+                  isActive={isActive("/models/published")}
+                />
               )}
             </div>
           </div>
-
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {currentUser ? (
+          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            {currentUser && (
+              <TokenDisplay />
+            )}
+            
+            {!currentUser ? (
+              <div className="flex items-center space-x-3">
+                <Link
+                  to="/login"
+                  className="bg-primary-50 hover:bg-primary-100 text-primary-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  Sign up
+                </Link>
+              </div>
+            ) : (
               <div className="ml-3 relative">
                 <div>
-                  <motion.button
+                  <button
                     onClick={toggleProfile}
-                    className="bg-primary-50 rounded-full flex text-sm ring-2 ring-white hover:ring-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 overflow-hidden transition-all duration-300"
+                    className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-300 group"
                     id="user-menu"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    whileTap={{ scale: 0.95 }}
-                    whileHover={{ scale: 1.05 }}
                   >
                     <span className="sr-only">Open user menu</span>
-                    <motion.div 
-                      className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-100 to-blue-100 flex items-center justify-center shadow-inner"
-                      whileHover={{ 
-                        backgroundColor: "#e0f2fe",
-                        transition: { duration: 0.3 } 
-                      }}
-                    >
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-100 to-blue-100 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300">
                       <span className="text-primary-800 font-semibold text-sm">
                         {(
                           currentUser.profile?.name ||
@@ -219,44 +253,54 @@ const Navbar = () => {
                           .charAt(0)
                           .toUpperCase()}
                       </span>
-                    </motion.div>
-                  </motion.button>
+                    </div>
+                  </button>
                 </div>
 
                 <AnimatePresence>
                   {isProfileOpen && (
                     <motion.div
-                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100"
+                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                       role="menu"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu"
-                      variants={dropdownVariants}
                       initial="hidden"
                       animate="visible"
                       exit="exit"
+                      variants={dropdownVariants}
                     >
-                      <div className="px-4 py-3 text-sm text-gray-700 border-b bg-gray-50 rounded-t-lg">
-                        <p className="font-medium">
-                          {currentUser.profile?.name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
+                      <div className="px-4 py-2 text-xs text-gray-400 border-b">
+                        Signed in as
+                        <div className="font-semibold text-gray-600 truncate max-w-[176px]">
                           {currentUser.email}
-                        </p>
+                        </div>
                       </div>
 
-                      {currentUser.role === "user" && (
-                        <ProfileLink to="/user-profile" label="Your Profile" onClick={() => setIsProfileOpen(false)} />
+                      {currentUser?.role === "user" && (
+                        <ProfileLink
+                          to="/user-profile"
+                          label="Your Profile"
+                          onClick={() => setIsProfileOpen(false)}
+                        />
                       )}
 
-                      {currentUser.role === "developer" && (
-                        <ProfileLink to="/dev-profile" label="Developer Profile" onClick={() => setIsProfileOpen(false)} />
+                      {currentUser?.role === "developer" && (
+                        <ProfileLink
+                          to="/dev-profile"
+                          label="Developer Profile"
+                          onClick={() => setIsProfileOpen(false)}
+                        />
                       )}
 
-                      <ProfileLink to="/dashboard" label="Dashboard" onClick={() => setIsProfileOpen(false)} />
+                      <ProfileLink
+                        to="/dashboard"
+                        label="Dashboard"
+                        onClick={() => setIsProfileOpen(false)}
+                      />
 
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 rounded-b-lg"
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
                         role="menuitem"
                       >
                         Sign out
@@ -264,31 +308,6 @@ const Navbar = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
-            ) : (
-              <div className="space-x-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 shadow-sm"
-                  >
-                    Log in
-                  </Link>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
-                  >
-                    Register
-                  </Link>
-                </motion.div>
               </div>
             )}
           </div>
@@ -343,7 +362,15 @@ const Navbar = () => {
               )}
 
               {currentUser?.role === "developer" && (
-                <MobileNavLink path="/models" label="My Models" isActive={isActive("/models")} onClick={() => setIsMenuOpen(false)} />
+                <>
+                  <MobileNavLink path="/models" label="My Models" isActive={isActive("/models")} onClick={() => setIsMenuOpen(false)} />
+                  <MobileNavLink 
+                    path="/developer-dashboard" 
+                    label="Analytics Dashboard" 
+                    isActive={isActive("/developer-dashboard") || isActive("/model-analytics")} 
+                    onClick={() => setIsMenuOpen(false)} 
+                  />
+                </>
               )}
 
               {currentUser && (
@@ -378,6 +405,38 @@ const Navbar = () => {
 
             {currentUser && (
               <div className="pt-4 pb-3 border-t border-gray-200">
+                {currentUser && (
+                  <div className="mx-4 mb-4">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center justify-between bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-3 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 text-blue-600 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">Your Tokens</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="bg-white px-3 py-1 rounded-full text-blue-800 font-medium text-sm shadow-sm">
+                          Loading...
+                        </span>
+                      </div>
+                    </Link>
+                  </div>
+                )}
                 <div className="flex items-center px-4">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-100 to-blue-100 flex items-center justify-center shadow-sm">

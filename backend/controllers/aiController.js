@@ -1,6 +1,8 @@
 const { OpenAIClient, AzureKeyCredential } = require("@azure/openai");
 const AIModel = require("../models/AIModel");
 const https = require('https');
+const tls = require("tls");
+const analyticsController = require("./analyticsController");
 
 // Create custom HTTPS agents with different SSL options to try
 const httpsAgents = {
@@ -158,6 +160,7 @@ exports.generateCompletion = async (req, res) => {
     console.log("Starting chat completion with properly set environment variables");
     
     const { modelId, messages } = req.body;
+    const startTime = Date.now(); // Track response time
 
     if (!modelId || !messages || !Array.isArray(messages)) {
       return res.status(400).json({
@@ -215,27 +218,29 @@ exports.generateCompletion = async (req, res) => {
       // Format the response
       const responseMessage = completionResponse.choices[0].message;
       const tokenUsage = completionResponse.usage;
-
-      // Update usage statistics for the model
-      await AIModel.findByIdAndUpdate(modelId, {
-        $inc: {
-          "stats.usageCount": 1,
-        },
-      });
+      const responseTime = Date.now() - startTime;
 
       // Calculate cost if per-token pricing is enabled
       let cost = 0;
       if (aiModel.perTokenPricing.enabled && aiModel.perTokenPricing.price > 0) {
         const tokensUsed = tokenUsage.totalTokens;
         cost = tokensUsed * aiModel.perTokenPricing.price;
-        
-        // Update revenue
-        await AIModel.findByIdAndUpdate(modelId, {
-          $inc: {
-            "stats.revenue": cost,
-          },
-        });
       }
+
+      // Record analytics data
+      const userLocation = req.headers['x-forwarded-for'] || 
+                         req.connection.remoteAddress || 
+                         'unknown';
+      
+      await analyticsController.recordModelInteraction(modelId, {
+        tokens: {
+          input: tokenUsage.promptTokens,
+          output: tokenUsage.completionTokens,
+        },
+        revenue: cost,
+        responseTime: responseTime,
+        location: userLocation.split(',')[0] // Use first IP if multiple are provided
+      });
 
       return res.status(200).json({
         success: true,

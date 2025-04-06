@@ -178,4 +178,21 @@ export const testModelRoutes = async () => {
   } catch (error) {
     throw error.response?.data || error.message;
   }
+};
+
+// Send a chat message with model ID to properly deduct tokens
+export const sendChatMessage = async (message, modelId) => {
+  try {
+    const payload = { message };
+    
+    // Include modelId if provided
+    if (modelId) {
+      payload.modelId = modelId;
+    }
+    
+    const response = await apiClient.post("/chat", payload);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
 }; 
