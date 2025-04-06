@@ -4,13 +4,15 @@ import { useAuth } from "../contexts/AuthContext";
 import AnimatedSection, { AnimatedItem } from "../components/common/AnimatedSection";
 import AnimatedCounter from "../components/common/AnimatedCounter";
 import AnimatedCard from "../components/common/AnimatedCard";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import HeroSection from "../components/hero/HeroSection";
 
 const Home = () => {
+  // eslint-disable-next-line no-unused-vars
   const { currentUser } = useAuth();
 
-  // Hero animation for the gradient background
+  // eslint-disable-next-line no-unused-vars
   const gradientAnimation = {
     animate: {
       background: [

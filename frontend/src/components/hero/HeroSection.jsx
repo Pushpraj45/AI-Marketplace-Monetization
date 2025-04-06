@@ -179,7 +179,15 @@ const HeroSection = ({
                 <div>
                   <motion.p 
                     className="text-3xl font-bold text-primary-600"
-                    animate={floatingAnimation}
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{
+                      y: {
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                        ease: "easeInOut"
+                      }
+                    }}
                   >
                     500+
                   </motion.p>
@@ -188,7 +196,16 @@ const HeroSection = ({
                 <div>
                   <motion.p 
                     className="text-3xl font-bold text-primary-600"
-                    animate={floatingAnimation}
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{
+                      y: {
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                        ease: "easeInOut",
+                        delay: 0.3
+                      }
+                    }}
                   >
                     10K+
                   </motion.p>
@@ -197,7 +214,16 @@ const HeroSection = ({
                 <div>
                   <motion.p 
                     className="text-3xl font-bold text-primary-600"
-                    animate={floatingAnimation}
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{
+                      y: {
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                        ease: "easeInOut",
+                        delay: 0.6
+                      }
+                    }}
                   >
                     99.9%
                   </motion.p>

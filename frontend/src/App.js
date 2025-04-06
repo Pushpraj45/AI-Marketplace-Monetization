@@ -16,6 +16,10 @@ import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import Marketplace from "./pages/Marketplace";
 import Models from "./pages/Models";
+import ModelDetail from "./pages/ModelDetail";
+import ModelEdit from "./pages/ModelEdit";
+import UserModels from "./pages/UserModels";
+import ApiTester from "./pages/ApiTester";
 
 function App() {
   return (
@@ -70,18 +74,27 @@ function App() {
               <Route
                 path="/marketplace"
                 element={
-                  <ProtectedRoute allowedRoles={["user"]}>
+                  <ProtectedRoute allowedRoles={["user", "developer"]}>
                     <Marketplace />
                   </ProtectedRoute>
                 }
               />
 
               <Route
-                path="/model/:id"
+                path="/marketplace/:id"
                 element={
                   <ProtectedRoute allowedRoles={["user", "developer"]}>
-                    {/* ModelDetails component would go here in a real implementation */}
-                    <div>Model Details Page</div>
+                    <ModelDetail />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* User Routes */}
+              <Route
+                path="/models/published"
+                element={
+                  <ProtectedRoute allowedRoles={["user", "developer"]}>
+                    <UserModels />
                   </ProtectedRoute>
                 }
               />
@@ -107,31 +120,19 @@ function App() {
               />
 
               <Route
-                path="/publish-model"
+                path="/models/:id/edit"
                 element={
                   <ProtectedRoute allowedRoles={["developer"]}>
-                    {/* PublishModel component would go here in a real implementation */}
-                    <div>Publish Model Page</div>
+                    <ModelEdit />
                   </ProtectedRoute>
                 }
               />
 
               <Route
-                path="/edit-model/:id"
+                path="/api-tester"
                 element={
-                  <ProtectedRoute allowedRoles={["developer"]}>
-                    {/* EditModel component would go here in a real implementation */}
-                    <div>Edit Model Page</div>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/model-details/:id"
-                element={
-                  <ProtectedRoute allowedRoles={["developer"]}>
-                    {/* ModelDetailsForDev component would go here in a real implementation */}
-                    <div>Model Details (Developer View) Page</div>
+                  <ProtectedRoute allowedRoles={["user", "developer", "admin"]}>
+                    <ApiTester />
                   </ProtectedRoute>
                 }
               />

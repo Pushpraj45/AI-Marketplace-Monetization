@@ -1,375 +1,233 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import AnimatedCard from "../components/common/AnimatedCard";
-import AnimatedSection, { AnimatedItem } from "../components/common/AnimatedSection";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import { getMarketplaceModels } from "../services/modelService";
 import { motion } from "framer-motion";
-import ModelFilter from "../components/models/ModelFilter";
-import ModelList from "../components/models/ModelList";
 
 const Marketplace = () => {
   const { currentUser } = useAuth();
-  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState([]);
   const [filteredModels, setFilteredModels] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedPriceRange, setSelectedPriceRange] = useState([]);
-  const [sortBy, setSortBy] = useState("popularity");
-  const [showFilters, setShowFilters] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [error, setError] = useState(null);
 
-  // Handle responsive layout
+  // Fetch models from API
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+    const fetchModels = async () => {
+      setLoading(true);
+      try {
+        const response = await getMarketplaceModels();
+        const modelsData = response.data || [];
+        setModels(modelsData);
+        setFilteredModels(modelsData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching marketplace models:", err);
+        setError("Failed to load AI models. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    fetchModels();
   }, []);
 
-  // Check URL params for category
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const categoryParam = params.get('category');
-    if (categoryParam) {
-      setSelectedCategory(categoryParam);
-    }
-  }, [location]);
-
-  // Mock data - in a real app, this would come from an API
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockModels = [
-        {
-          id: "model1",
-          name: "TextClassifier Pro",
-          description:
-            "Advanced text classification model with support for 100+ languages.",
-          developer: "AI Solutions Inc.",
-          category: "nlp",
-          image: "https://via.placeholder.com/300x200?text=Text+Classifier",
-          price: 0.001,
-          pricingModel: "api",
-          rating: 4.7,
-          tags: ["text", "classification", "multilingual"],
-        },
-        {
-          id: "model2",
-          name: "ImageVision API",
-          description:
-            "State-of-the-art computer vision model for object detection and image analysis.",
-          developer: "Vision Labs",
-          category: "computer-vision",
-          image: "https://via.placeholder.com/300x200?text=Image+Vision",
-          price: 0.05,
-          pricingModel: "api",
-          rating: 4.6,
-          tags: ["image", "object-detection", "recognition"],
-        },
-        {
-          id: "model3",
-          name: "SentimentAnalyzer",
-          description:
-            "Accurate sentiment analysis for customer feedback and social media.",
-          developer: "NLP Experts",
-          category: "nlp",
-          image: "https://via.placeholder.com/300x200?text=Sentiment+Analyzer",
-          price: 49.99,
-          pricingModel: "subscription",
-          rating: 4.2,
-          tags: ["sentiment", "analysis", "emotion"],
-        },
-        {
-          id: "model4",
-          name: "VoiceTranscriber",
-          description:
-            "Real-time speech-to-text with high accuracy in noisy environments.",
-          developer: "Vision Labs",
-          category: "speech",
-          image: "https://via.placeholder.com/300x200?text=Voice+Transcriber",
-          price: 0.005,
-          pricingModel: "api",
-          rating: 4.4,
-          tags: ["voice", "transcription", "real-time"],
-        },
-        {
-          id: "model5",
-          name: "CodeAssistant",
-          description:
-            "AI-powered code completion and suggestions for multiple programming languages.",
-          developer: "CodeAI Labs",
-          category: "code",
-          image: "https://via.placeholder.com/300x200?text=Code+Assistant",
-          price: 0,
-          pricingModel: "free",
-          rating: 4.8,
-          tags: ["code", "programming", "assistance"],
-        },
-        {
-          id: "model6",
-          name: "DataAnalyzer Pro",
-          description:
-            "Advanced data analysis with automated insights and visualization.",
-          developer: "Data Systems Inc.",
-          category: "data",
-          image: "https://via.placeholder.com/300x200?text=Data+Analyzer",
-          price: 99.99,
-          pricingModel: "subscription",
-          rating: 4.5,
-          tags: ["data", "analysis", "visualization"],
-        },
-      ];
-
-      const allCategories = [
-        { id: "nlp", name: "Natural Language Processing" },
-        { id: "computer-vision", name: "Computer Vision" },
-        { id: "speech", name: "Speech Recognition" },
-        { id: "code", name: "Code Generation" },
-        { id: "data", name: "Data Analysis" },
-      ];
-
-      setModels(mockModels);
-      setFilteredModels(mockModels);
-      setCategories(allCategories);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  // Filter and sort models
+  // Filter models when search query or category changes
   useEffect(() => {
     let result = [...models];
 
-    // Apply category filter
-    if (selectedCategory !== "all") {
-      result = result.filter((model) => model.category === selectedCategory);
-    }
-
-    // Apply price range filter
-    if (selectedPriceRange && selectedPriceRange.length > 0) {
-      result = result.filter((model) => {
-        if (selectedPriceRange.includes('free') && model.price === 0) return true;
-        if (selectedPriceRange.includes('low') && model.price > 0 && model.price <= 0.01) return true;
-        if (selectedPriceRange.includes('medium') && model.price > 0.01 && model.price <= 10) return true;
-        if (selectedPriceRange.includes('high') && model.price > 10) return true;
-        return false;
-      });
-    }
-
-    // Apply search term filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       result = result.filter(
         (model) =>
-          model.name.toLowerCase().includes(term) ||
-          model.description.toLowerCase().includes(term) ||
-          model.tags.some((tag) => tag.includes(term))
+          model.name.toLowerCase().includes(query) ||
+          model.description.toLowerCase().includes(query) ||
+          (model.tags && model.tags.some((tag) => tag.toLowerCase().includes(query)))
       );
     }
 
-    // Apply sorting
-    switch (sortBy) {
-      case "popularity":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      case "newest":
-        // In a real app, would sort by date
-        result.sort((a, b) => b.id.localeCompare(a.id));
-        break;
-      case "price-low":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        break;
+    // Filter by category
+    if (selectedCategory !== "all" && selectedCategory) {
+      result = result.filter((model) => 
+        model.tags && model.tags.includes(selectedCategory)
+      );
     }
 
     setFilteredModels(result);
-  }, [models, selectedCategory, selectedPriceRange, searchTerm, sortBy]);
+  }, [searchQuery, selectedCategory, models]);
 
-  // Handle filter changes
-  const handleFilterChange = (filterType, value) => {
-    switch (filterType) {
-      case 'category':
-        setSelectedCategory(value);
-        break;
-      case 'price':
-        setSelectedPriceRange(value);
-        break;
-      case 'sort':
-        setSortBy(value);
-        break;
-      case 'search':
-        setSearchTerm(value);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("all");
-    setSelectedPriceRange([]);
-    setSortBy("popularity");
-  };
-
-  const handleToggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  if (loading) {
-    return (
-      <div className="container mx-auto py-24 flex justify-center">
-        <LoadingSpinner size="lg" text="Loading marketplace..." />
-      </div>
-    );
-  }
-
-  // Format categories for filter component
-  const categoryOptions = [
-    { id: "all", name: "All Categories" },
-    ...categories
+  // Extract unique categories from models
+  const categories = [
+    "all",
+    ...new Set(
+      models
+        .flatMap((model) => model.tags || [])
+        .filter(Boolean)
+    ),
   ];
 
-  // Create price range options
-  const priceOptions = [
-    { id: "free", name: "Free" },
-    { id: "low", name: "Low ($0 - $0.01)" },
-    { id: "medium", name: "Medium ($0.01 - $10)" },
-    { id: "high", name: "High (>$10)" },
-  ];
-
-  // Create sort options
-  const sortOptions = [
-    { id: "popularity", name: "Most Popular" },
-    { id: "newest", name: "Newest First" },
-    { id: "price-low", name: "Price: Low to High" },
-    { id: "price-high", name: "Price: High to Low" },
-  ];
+  // Model card animation variants
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (custom) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: custom * 0.1, duration: 0.3 }
+    })
+  };
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <AnimatedSection animation="slideIn" className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+    <div className="container mx-auto py-8 px-4">
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
           AI Model Marketplace
         </h1>
-        {currentUser && (
-          <Link
-            to="/usage-history"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100 transition-all duration-300 hover:scale-105"
-          >
-            My Usage History
-          </Link>
-        )}
-      </AnimatedSection>
+        <p className="max-w-2xl mx-auto text-lg text-gray-600">
+          Discover and use powerful AI models created by developers. Find the
+          perfect model for your needs.
+        </p>
+      </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Filters sidebar */}
-        <div className={`${isMobile && !showFilters ? 'hidden' : 'block'} lg:block w-full lg:w-64 flex-shrink-0`}>
-          <ModelFilter 
-            categories={categoryOptions}
-            selectedCategory={selectedCategory}
-            priceRanges={priceOptions}
-            selectedPriceRange={selectedPriceRange}
-            sortOptions={sortOptions}
-            selectedSort={sortBy}
-            searchTerm={searchTerm}
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-            isMobile={isMobile}
-            onClose={() => setShowFilters(false)}
-          />
-        </div>
-
-        {/* Main content area */}
-        <div className="flex-1">
-          {/* Mobile filter button */}
-          {isMobile && (
-            <motion.button
-              onClick={handleToggleFilters}
-              className="w-full mb-4 flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {showFilters ? "Hide Filters" : "Show Filters"}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
+          <div className="relative flex-grow max-w-3xl">
+            <input
+              type="text"
+              placeholder="Search models..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+            />
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <svg
+                className="h-5 w-5 text-gray-400"
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 ml-2"
                 viewBox="0 0 20 20"
                 fill="currentColor"
+                aria-hidden="true"
               >
                 <path
                   fillRule="evenodd"
-                  d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
                   clipRule="evenodd"
                 />
               </svg>
-            </motion.button>
-          )}
-
-          {/* Search bar */}
-          <AnimatedSection animation="fadeIn" className="mb-6">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search models by name, description, or tags..."
-                className="block w-full p-3 pl-10 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              {searchTerm && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              )}
             </div>
-          </AnimatedSection>
+          </div>
 
-          {/* Models list */}
-          <ModelList 
-            models={filteredModels} 
-            title={`${filteredModels.length} Models Found`} 
-          />
+          <div className="flex-shrink-0">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="block w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center py-16">
+          <div className="loader">Loading...</div>
+        </div>
+      ) : filteredModels.length === 0 ? (
+        <div className="text-center py-16 bg-white shadow-sm rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No models found
+          </h3>
+          <p className="text-gray-600">
+            {searchQuery || selectedCategory !== "all"
+              ? "Try adjusting your search criteria"
+              : "No models are currently available in the marketplace"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredModels.map((model, index) => (
+            <motion.div
+              key={model._id || model.id}
+              custom={index}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 flex flex-col"
+            >
+              <div className="p-6 flex-grow">
+                <div className="flex justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {model.name}
+                  </h3>
+                </div>
+                
+                <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                  {model.description}
+                </p>
+                
+                {model.owner?.profile?.name && (
+                  <p className="text-xs text-gray-500 mb-3">
+                    By{" "}
+                    <span className="font-medium text-gray-700">
+                      {model.owner.profile.name}
+                      {model.owner.profile.organization && ` (${model.owner.profile.organization})`}
+                    </span>
+                  </p>
+                )}
+                
+                {model.tags && model.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3 mb-4">
+                    {model.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="bg-gray-50 p-2 rounded text-center">
+                    <p className="text-xs text-gray-500">Usage</p>
+                    <p className="font-medium">{model.stats?.usageCount?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded text-center">
+                    <p className="text-xs text-gray-500">Pricing</p>
+                    <p className="font-medium">
+                      {model.perTokenPricing?.enabled
+                        ? `$${model.perTokenPricing.price}/token`
+                        : "Free"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <Link
+                  to={`/marketplace/${model._id || model.id}`}
+                  className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Try This Model
+                </Link>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

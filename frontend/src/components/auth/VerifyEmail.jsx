@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 const VerifyEmail = () => {
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState("");
   const { token } = useParams();
