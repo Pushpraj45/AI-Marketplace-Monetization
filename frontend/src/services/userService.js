@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Make sure API_URL is correctly formatted
 const API_URL = (() => {
-  const url = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+  const url = process.env.REACT_APP_API_URL || "https://ai-marketplace-monetization.onrender.com/api";
   // Remove trailing slash if present
   return url.endsWith('/') ? url.slice(0, -1) : url;
 })();
@@ -76,7 +76,7 @@ export const getPublishedModels = async (filters = {}) => {
       // Manually create a direct axios call to avoid baseURL issues
       const testUrl = process.env.REACT_APP_API_URL 
         ? `${process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '')}/api/test/models/published` 
-        : 'http://localhost:5000/api/test/models/published';
+        : 'https://ai-marketplace-monetization.onrender.com/api/test/models/published';
       
       console.log('Direct test URL:', testUrl);
       

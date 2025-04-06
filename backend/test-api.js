@@ -10,7 +10,7 @@ const testData = {
 };
 
 // API endpoint
-const apiUrl = 'http://localhost:5000/api/models/chat';
+const apiUrl = 'https://ai-marketplace-monetization.onrender.com/api/models/chat';
 
 // Make the request
 async function testApiRequest() {

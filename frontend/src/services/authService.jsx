@@ -1,7 +1,7 @@
 
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://ai-marketplace-monetization.onrender.com/api";
 
 // Create axios instance with default headers
 const apiClient = axios.create({
