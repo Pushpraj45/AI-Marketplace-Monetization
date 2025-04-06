@@ -34,7 +34,7 @@ const ApiTester = () => {
     setResponse(null);
     
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const baseUrl = process.env.REACT_APP_API_URL || 'https://ai-marketplace-monetization.onrender.com/';
       
       // Clean up any potential double slashes in the URL
       let cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;

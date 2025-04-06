@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // API base URL
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://ai-marketplace-monetization.onrender.com/api';
 
 // Function to test public chat API
 async function testPublicChatAPI() {
