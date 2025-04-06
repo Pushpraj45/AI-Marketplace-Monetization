@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getMarketplaceModelById, generateCompletion, testAzureConnection, testDeployments, directTest, getSimpleCompletion, pythonStyleTest } from '../services/modelService';
+import { useTokens } from '../contexts/TokenContext';
+import { 
+  getMarketplaceModelById, 
+  generateCompletion, 
+  testAzureConnection, 
+  testDeployments, 
+  directTest, 
+  getSimpleCompletion, 
+  pythonStyleTest,
+  sendChatMessage 
+} from '../services/modelService';
 import { motion } from 'framer-motion';
+import { getUserTokens } from '../services/tokenService';
 
 const ModelDetail = () => {
   const { id } = useParams();
   const { currentUser } = useAuth();
+  const { tokenBalance, updateTokenBalance, fetchTokenBalance } = useTokens();
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,6 +66,20 @@ const ModelDetail = () => {
     e.preventDefault();
     
     if (!inputValue.trim() || isGenerating) return;
+
+    // Check token balance
+    if (tokenBalance !== null && tokenBalance < 500) {
+      setMessages([
+        ...messages,
+        { role: 'user', content: inputValue },
+        { 
+          role: 'system', 
+          content: "You don't have enough tokens. Each chat costs 500 tokens. Please visit the dashboard to add more tokens."
+        }
+      ]);
+      setInputValue('');
+      return;
+    }
     
     // Add user message to chat
     const userMessage = { role: 'user', content: inputValue };
@@ -65,21 +91,43 @@ const ModelDetail = () => {
     setIsGenerating(true);
     
     try {
-      const response = await generateCompletion(model._id, updatedMessages);
+      // Use sendChatMessage for token deduction
+      const chatResponse = await sendChatMessage(inputValue, model._id);
+      
+      // Update token balance if returned from API
+      if (chatResponse.success && chatResponse.data.tokenBalance !== undefined) {
+        updateTokenBalance(chatResponse.data.tokenBalance);
+        console.log(`Token balance updated to: ${chatResponse.data.tokenBalance}`);
+      }
       
       // Add AI response to chat
-      setMessages([...updatedMessages, response.data.message]);
-    } catch (error) {
-      console.error("Error generating response:", error);
       setMessages([
         ...updatedMessages, 
-        { 
-          role: 'assistant', 
-          content: "I'm sorry, I encountered an error while processing your request. Please try again." 
+        { role: 'assistant', content: chatResponse.data.response }
+      ]);
+    } catch (error) {
+      console.error("Error generating response:", error);
+      
+      let errorMessage = "I'm sorry, I encountered an error while processing your request. Please try again.";
+      
+      // Check if the error is due to insufficient tokens
+      if (error.response?.data?.error === 'Insufficient token balance') {
+        errorMessage = "You don't have enough tokens to continue chatting. Each message costs 500 tokens.";
+        
+        // Update token balance if it was returned
+        if (error.response?.data?.balance !== undefined) {
+          updateTokenBalance(error.response.data.balance);
         }
+      }
+      
+      setMessages([
+        ...updatedMessages, 
+        { role: 'assistant', content: errorMessage }
       ]);
     } finally {
       setIsGenerating(false);
+      // Always refresh token balance after a chat
+      fetchTokenBalance();
     }
   };
 
@@ -452,6 +500,25 @@ const ModelDetail = () => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-[70vh]">
             <div className="bg-primary-600 text-white px-6 py-4">
               <h2 className="text-xl font-semibold">Chat with {model.name}</h2>
+              {tokenBalance !== null && (
+                <div className="flex items-center mt-1 text-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>Token Balance: {tokenBalance.toLocaleString()} (Cost per chat: 500 tokens)</span>
+                </div>
+              )}
             </div>
 
             {/* Chat messages area */}

@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TokenProvider } from "./contexts/TokenContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Navbar from "./components/common/Navbar";
 import Login from "./components/auth/Login";
@@ -20,128 +21,162 @@ import ModelDetail from "./pages/ModelDetail";
 import ModelEdit from "./pages/ModelEdit";
 import UserModels from "./pages/UserModels";
 import ApiTester from "./pages/ApiTester";
+import DeveloperDashboard from "./pages/DeveloperDashboard";
+import ModelAnalytics from "./pages/ModelAnalytics";
+import TokenHistory from "./pages/TokenHistory";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <div className="container mx-auto px-4 py-8">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/verify-email/:token" element={<VerifyEmail />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route
-                path="/reset-password/:token"
-                element={<ResetPassword />}
-              />
-              <Route path="/unauthorized" element={<Unauthorized />} />
+        <TokenProvider>
+          <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <div className="container mx-auto px-4 py-8">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/verify-email/:token" element={<VerifyEmail />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route
+                  path="/reset-password/:token"
+                  element={<ResetPassword />}
+                />
+                <Route path="/unauthorized" element={<Unauthorized />} />
 
-              {/* Protected Routes for any authenticated user */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute allowedRoles={["user", "developer"]}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected Routes for any authenticated user */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={["user", "developer"]}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Protected Routes for specific roles */}
-              <Route
-                path="/user-profile"
-                element={
-                  <ProtectedRoute allowedRoles={["user"]}>
-                    <UserProfile />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Token Management Routes */}
+                <Route
+                  path="/token-history"
+                  element={
+                    <ProtectedRoute allowedRoles={["user", "developer"]}>
+                      <TokenHistory />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/dev-profile"
-                element={
-                  <ProtectedRoute allowedRoles={["developer"]}>
-                    <DevProfile />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected Routes for specific roles */}
+                <Route
+                  path="/user-profile"
+                  element={
+                    <ProtectedRoute allowedRoles={["user"]}>
+                      <UserProfile />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Marketplace Routes */}
-              <Route
-                path="/marketplace"
-                element={
-                  <ProtectedRoute allowedRoles={["user", "developer"]}>
-                    <Marketplace />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/dev-profile"
+                  element={
+                    <ProtectedRoute allowedRoles={["developer"]}>
+                      <DevProfile />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/marketplace/:id"
-                element={
-                  <ProtectedRoute allowedRoles={["user", "developer"]}>
-                    <ModelDetail />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Analytics Dashboard Routes */}
+                <Route
+                  path="/developer-dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={["developer"]}>
+                      <DeveloperDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* User Routes */}
-              <Route
-                path="/models/published"
-                element={
-                  <ProtectedRoute allowedRoles={["user", "developer"]}>
-                    <UserModels />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/model-analytics/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={["developer"]}>
+                      <ModelAnalytics />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/usage-history"
-                element={
-                  <ProtectedRoute allowedRoles={["user"]}>
-                    {/* UsageHistory component would go here in a real implementation */}
-                    <div>Usage History Page</div>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Marketplace Routes */}
+                <Route
+                  path="/marketplace"
+                  element={
+                    <ProtectedRoute allowedRoles={["user", "developer"]}>
+                      <Marketplace />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Developer Routes */}
-              <Route
-                path="/models"
-                element={
-                  <ProtectedRoute allowedRoles={["developer"]}>
-                    <Models />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/marketplace/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={["user", "developer"]}>
+                      <ModelDetail />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/models/:id/edit"
-                element={
-                  <ProtectedRoute allowedRoles={["developer"]}>
-                    <ModelEdit />
-                  </ProtectedRoute>
-                }
-              />
+                {/* User Routes */}
+                <Route
+                  path="/models/published"
+                  element={
+                    <ProtectedRoute allowedRoles={["user", "developer"]}>
+                      <UserModels />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/api-tester"
-                element={
-                  <ProtectedRoute allowedRoles={["user", "developer", "admin"]}>
-                    <ApiTester />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/usage-history"
+                  element={
+                    <ProtectedRoute allowedRoles={["user"]}>
+                      {/* UsageHistory component would go here in a real implementation */}
+                      <div>Usage History Page</div>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* 404 Page */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* Developer Routes */}
+                <Route
+                  path="/models"
+                  element={
+                    <ProtectedRoute allowedRoles={["developer"]}>
+                      <Models />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/models/:id/edit"
+                  element={
+                    <ProtectedRoute allowedRoles={["developer"]}>
+                      <ModelEdit />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/api-tester"
+                  element={
+                    <ProtectedRoute allowedRoles={["user", "developer", "admin"]}>
+                      <ApiTester />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* 404 Page */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
           </div>
-        </div>
+        </TokenProvider>
       </AuthProvider>
     </Router>
   );

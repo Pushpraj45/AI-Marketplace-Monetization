@@ -1,17 +1,31 @@
 const express = require('express');
-const { chatWithModel, getChatHistory } = require('../controllers/chatController');
+const { chatWithModel, getChatHistory, getTokenBalance } = require('../controllers/chatController');
 // Middleware for authentication
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Chat with model route (authenticated)
-router.post('/', auth, chatWithModel);
+// Create a separate router for public routes
+const publicRouter = express.Router();
 
 // Public chat route for testing (no auth required)
-router.post('/public', chatWithModel);
+publicRouter.post('/public', chatWithModel);
+
+// Use auth middleware for protected routes
+router.use(auth);
+
+// Chat with model route (authenticated)
+router.post('/', chatWithModel);
 
 // Get chat history route
-router.get('/history', auth, getChatHistory);
+router.get('/history', getChatHistory);
 
-module.exports = router; 
+// Get token balance
+router.get('/tokens', getTokenBalance);
+
+// Combine routers
+const chatRoutes = express.Router();
+chatRoutes.use('/', publicRouter);
+chatRoutes.use('/', router);
+
+module.exports = chatRoutes; 

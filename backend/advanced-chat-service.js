@@ -19,8 +19,7 @@ const azureHttpsAgent = new https.Agent({
 // Initialize the Azure OpenAI client with proper TLS settings
 const client = new OpenAIClient(
   endpoint, 
-  new AzureKeyCredential(apiKey),
-  { httpClient: { httpAgent: azureHttpsAgent } }
+  new AzureKeyCredential(apiKey)
 );
 
 // Utility functions to extract information from user input

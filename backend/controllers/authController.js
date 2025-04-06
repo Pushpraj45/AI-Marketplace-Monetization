@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Token = require("../models/Token");
+const UserTokens = require("../models/UserTokens");
 const sendgrid = require("../config/sendgrid");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -32,6 +33,21 @@ exports.register = async (req, res) => {
     });
 
     await user.save();
+
+    // Initialize user tokens with 10,000 initial tokens
+    const userTokens = new UserTokens({
+      userId: user._id,
+      balance: 10000,
+      history: [
+        {
+          action: "credit",
+          amount: 10000,
+          description: "Initial signup bonus",
+        },
+      ],
+    });
+
+    await userTokens.save();
 
     // DISABLED FOR DEVELOPMENT: Email verification
     /* 
