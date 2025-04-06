@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const AIModel = require("../models/AIModel");
 
 /**
  * @desc    Get all users (admin only)
@@ -178,6 +179,55 @@ exports.deleteUser = async (req, res) => {
       success: false,
       message: "Server error while deleting user",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Get published models for users
+ * @route   GET /api/users/models/published
+ * @access  Private (any authenticated user)
+ */
+exports.getPublishedModels = async (req, res) => {
+  try {
+    const { category, search } = req.query;
+    
+    // Base query for published models
+    let query = { 
+      status: "active", 
+      isPublished: true 
+    };
+    
+    // Add category filter if provided
+    if (category && category !== 'all') {
+      query.tags = { $in: [category] };
+    }
+    
+    // Add search filter if provided
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
+      ];
+    }
+    
+    const models = await AIModel.find(query)
+      .populate("owner", "profile.name profile.organization")
+      .select("-firstMessage")
+      .sort({ publishedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: models.length,
+      data: models
+    });
+  } catch (error) {
+    console.error("Get published models error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching published models",
+      error: error.message
     });
   }
 };

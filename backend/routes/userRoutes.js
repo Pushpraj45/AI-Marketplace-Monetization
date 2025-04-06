@@ -7,6 +7,9 @@ const roleCheck = require("../middleware/roleCheck");
 // Get all users - admin only
 router.get("/", auth, roleCheck(["admin"]), userController.getAllUsers);
 
+// Get published models for users
+router.get("/models/published", auth, userController.getPublishedModels);
+
 // Get user by ID - own profile or admin
 router.get("/:id", auth, userController.getUserById);
 
